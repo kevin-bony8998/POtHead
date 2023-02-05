@@ -46,9 +46,6 @@ def googleSheetUpdater(POTicketNumber, POTicketDescription, POTicketStatus, user
             return
 
         print("This could be the total number of rows in the google sheet:", len(values))
-        for row in values:
-            # Print columns A and E, which correspond to indices 0 and 4.
-            print(row)
         
         currTotalRows = len(values)
         # sheet.update_cell(currTotalRows + 1, 0, time.time) #For updating the time stamp
@@ -57,7 +54,7 @@ def googleSheetUpdater(POTicketNumber, POTicketDescription, POTicketStatus, user
         # sheet.update_cell(currTotalRows + 1, 3, POTicketDescription) #For updating the PO ticket description
         # sheet.update_cell(currTotalRows + 1, 4, POTicketStatus) #For updating the PO ticket status
         values = [
-            [str(datetime.now()), userName, POTicketNumber, POTicketDescription, POTicketStatus]
+            [str(datetime.now()), userName, "PO-"+POTicketNumber, POTicketDescription, POTicketStatus]
         ]
         range = "A" + str(currTotalRows + 1) + ":F" + str(currTotalRows + 1)
         print("These are the values that we are passing to the update function:", values, range)

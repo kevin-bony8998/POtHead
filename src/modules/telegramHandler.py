@@ -140,7 +140,7 @@ def startUserFlow(chatId):
 def getTicketDetails(chatId):
     global customInputRequired, ticketDetailEntry
     print("[telegramHandler][getTicketDetails] Received a confirmation on ticket number from the user! Here is it's chatId:", chatId)
-    bot.send_message(chatId, 'Please enter the PO ticket description!')
+    bot.send_message(chatId, 'Please enter the PO ticket description! If this is an updated ticket, you can leave this field blank!')
     customInputRequired = True
     ticketDetailEntry = True
 
