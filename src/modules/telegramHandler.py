@@ -1,6 +1,7 @@
 import telebot
 import requests
 from telebot import types
+from googleSheetHandler import googleSheetUpdater
 
 BOT_TOKEN = "5914370761:AAFhHez9-JBphU1cNz4WQ-uBDonTduUDm_k"
 
@@ -10,6 +11,8 @@ customInputRequired = False
 ticketDetailEntry = False
 POTicketNumber = ""
 POTicketDescription = ""
+POTicketStatus = ""
+userName = ""
 
 def telSendInlinebutton(customKeyBoardOptions):
     print("[telegramHandler][telSendInlinebutton] Entered the custom option keyboard function! Here are the custom keyboard options: ", customKeyBoardOptions)
@@ -81,14 +84,45 @@ def POTicketHandler(message):
 
 @bot.message_handler(func=lambda call: (customInputRequired and ticketDetailEntry))
 def POTicketDescriptionHandler(message):
-    global customInputRequired, ticketDetailEntry
+    global customInputRequired, ticketDetailEntry,POTicketDescription
     print("[telegramHandler][POTicketDescriptionHandler] Entered the POTicketDescriptionHandler function! Here is the message value:", message)
-    acknowlegmentReply = "Got the description too! I'll take care of the rest! Thanks for your time!"
+    acknowlegmentReply = "Got the description!"
     POTicketDescription = message.text
     bot.reply_to(message, acknowlegmentReply)
     customInputRequired = False
     ticketDetailEntry = False
     print("[telegramHandler][POTicketDescriptionHandler] Final PO ticket number and description:", POTicketNumber, POTicketDescription)
+    customKeyBoardOptions = {
+        "chatId": message.chat.id,
+        "message": "Finally, what's the status of the ticket?",
+        "options": [
+            [
+                {
+                    "text": "To Do",
+                    "callback_data": "To Do"
+                },
+                {
+                    "text": "In Progress",
+                    "callback_data": "In Progress"
+                },
+                {
+                    "text": "Closed",
+                    "callback_data": "Closed"
+                }
+            ]
+        ]
+    }
+    print("[telegramHandler][sendWelcome] This is the chat id that we are sending: ",message.chat.id)
+    userOption = telSendInlinebutton(customKeyBoardOptions)
+    print("[telegramHandler][sendWelcome] Status of user menu selection: ", userOption)
+
+def updateTicketStatus(status, chatId):
+    global POTicketStatus
+    print("[telegramHandler][updateTicketStatus] Entered the ticket status handler! Here is the complete data: ", status, chatId)
+    acknowlegmentReply = "Got the ticket staus! I'll handle the rest! Thank you for your time!"
+    POTicketStatus = status
+    bot.send_message(chatId, acknowlegmentReply)
+    googleSheetUpdater(POTicketNumber, POTicketDescription, POTicketStatus, userName)
 
 def startUserFlow(chatId):
     global customInputRequired
@@ -115,6 +149,7 @@ def endUserFlow(chatId):
 
 @bot.callback_query_handler(func=lambda call: True)
 def handleQuery(userOptionData):
+    global userName
     print("[telegramHandler][handleQuery] Entered the callBackQueryHandler! Here is the complete data: ", userOptionData)
     print("[telegramHandler][handleQuery] Entered the callBackQueryHandler! Here is the selected option: ", userOptionData.data)
     userOption = userOptionData.data
@@ -122,6 +157,9 @@ def handleQuery(userOptionData):
         startUserFlow(userOptionData.message.chat.id)
     elif userOption == "ticketConfirmed":
         getTicketDetails(userOptionData.message.chat.id)
+    elif (userOption == "To Do") or (userOption == "In Progress") or (userOption == "Closed"):
+        userName = userOptionData.message.chat.first_name
+        updateTicketStatus(userOption, userOptionData.message.chat.id)
     else: 
         endUserFlow(userOptionData.message.chat.id)
 
